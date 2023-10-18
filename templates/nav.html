@@ -8,7 +8,7 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                {% if current_user is defined and current_user.role == 'User' %}                   
+                {% if user is defined and user.role == 'User' %}                   
                 <li class="nav-item"> 
                     <a class="nav-link" href="/signup_as_creator">Signup as creator</a>
                 </li>
@@ -18,15 +18,25 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>
                 </li> 
-                {% elif current_user is defined and current_user.role == 'Creator' %}
+                {% elif user is defined and user.role == 'Creator' %}
                 <li class="nav-item"> 
                     <a class="nav-link" href="/your_playlists">Your Playlists</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('creator_dashboard') }}">Creator Dashboard</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>
                 </li> 
+                {% elif user is defined and user.role == 'Admin' %}
+                <li class="nav-item"> 
+                    <a class="nav-link" href="/review_songs">Review Songs</a>
+                </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('creator_dashboard') }}">Creator Dashboard</a>
+                    <a class="nav-link" href="/creator_review">Creator Review</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Logout</a>
                 </li>
                 {% else %}
                 <li class="nav-item">

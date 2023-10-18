@@ -32,6 +32,10 @@ def login_post():
     if username == '' or password == '':
         flash('Please fill out all fields')
         return redirect(url_for('login'))
+    
+    if username == 'admin':
+        flash('If you are an admin, please log in as an admin using the admin login page.')
+        return redirect(url_for('login'))
 
     user = User.query.filter_by(username=username).first()
 
@@ -113,10 +117,10 @@ def register_post():
     flash('Registration successful. You can now log in.')
     return redirect(url_for('login'))
 
-@app.route('/signup_as_creator')
+'''@app.route('/signup_as_creator')
 @auth_required
 def signup_as_creator():
-    return render_template('signup_as_creator.html')  
+    return render_template('signup_as_creator.html')'''
 
 @app.route('/signup_as_creator', methods=['GET'])
 @auth_required
@@ -141,3 +145,8 @@ def change_role_to_creator():
 @auth_required
 def your_playlists():
     return render_template('your_playlists.html')  
+
+@app.route('/creator_dashboard')
+@auth_required
+def creator_dashboard():
+    return render_template('creator_dashboard.html')
