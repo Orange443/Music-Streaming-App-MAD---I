@@ -66,7 +66,7 @@ def admin_dashboard():
         user = User.query.get(user_id)
         if user.is_admin:
             # Render the admin dashboard template
-            return render_template('admin_dashboard.html')
+            return render_template('admin_dashboard.html', user=user)
     
     flash('You are not authorized to access the admin dashboard.')
     return redirect(url_for('login'))
