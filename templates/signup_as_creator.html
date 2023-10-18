@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+Sign Up as Creator - Tunes Library
+{% endblock %}
+
+{% block style %}
+<style>
+    .container {
+        text-align: center;
+        margin-top: 100px;
+    }
+
+    .creator-box {
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 5px #ccc;
+        background-color: #f8f8f8;
+    }
+
+    .creator-button {
+        background-color: #007bff;
+        color: #fff;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .creator-button:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="creator-box">
+        <h2>Kickstart your journey as a Creator</h2>
+        <p>Create songs and albums to share your music with the world!</p>
+        <form method="post" action="{{ url_for('change_role_to_creator') }}">
+            <button class="creator-button" type="submit">Become a Creator</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

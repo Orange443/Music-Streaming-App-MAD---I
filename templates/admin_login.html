@@ -1,0 +1,68 @@
+<!-- admin_login.html -->
+{% extends 'layout.html' %}
+
+{% block title %}
+Admin Login - Tunes Library
+{% endblock %}
+
+{% block style %}
+<style>
+    .admin-login-container {
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    form {
+        display: inline-block;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 5px #ccc;
+        background-color: #e1f5fe;
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    input[type="submit"] {
+        background-color: #03a9f4;
+        color: #fff;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #0277bd;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="admin-login-container">
+    <h1>Admin Login</h1>
+    <br>
+    <form method="post">
+        <label for="username">Admin Username:</label>
+        <input type="text" name="username" id="username" required minlength="4" maxlength="20">
+        <br>
+        <label for="password">Admin Password:</label>
+        <input type="password" name="password" id="password" required minlength="4">
+        <br>
+        <input type="submit" value="Login as Admin">
+    </form>
+</div>
+{% endblock %}
