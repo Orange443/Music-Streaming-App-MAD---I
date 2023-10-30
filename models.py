@@ -30,7 +30,7 @@ class Song(db.Model):
     artist = db.Column(db.String(100), nullable=False)
     lyrics = db.Column(db.Text, nullable=False)
     genre = db.Column(db.String(50), nullable=False)
-    rating = db.Column(db.Float, nullable=False)
+    rating = db.Column(db.Float, nullable=False, default=0.0)
     album_id = db.Column(db.Integer, db.ForeignKey('albums.album_id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
 
