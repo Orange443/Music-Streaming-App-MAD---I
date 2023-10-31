@@ -4,6 +4,11 @@ from models import db, User, Song, Album, Playlist, PlaylistSong, CreatorBlackli
 from app import app
 from sqlalchemy import func, distinct
 from werkzeug.security import check_password_hash
+import time
+import re
+import datetime
+
+
 
 
 def auth_required(func):
@@ -97,7 +102,7 @@ def admin_dashboard():
             total_users = User.query.count()
             total_creators = User.query.filter_by(role='Creator').count()
             total_albums = Album.query.count()
-            distinct_genres = db.session.query(func.count(distinct(Song.genre))).scalar()
+            distinct_genres = db.session.query(func.count(distinct(Album.genre))).scalar()
             return render_template(
                 'admin_dashboard.html',
                 distinct_genres=distinct_genres, 
@@ -170,6 +175,7 @@ def signup_as_creator():
 def change_role_to_creator():
     # Get the current user
     user = User.query.get(session['user_id'])
+    created_songs = Song.query.filter_by(creator_id=session['user_id']).all()
     
     # Change the user's role to 'Creator' and update the database
     user.role = 'Creator'
@@ -189,7 +195,8 @@ def your_playlists():
 @creator_required
 def creator_dashboard():
     user = User.query.get(session['user_id'])
-    return render_template('creator_dashboard.html', user=user)
+    albums = user.created_albums
+    return render_template('creator_dashboard.html', user=user,albums=albums)
 
 
 @app.route('/logout')
@@ -197,6 +204,33 @@ def logout():
     session.pop('user_id', None)
     flash('You have been logged out.')
     return redirect(url_for('login'))
+
+@app.route('/albums/add')
+@creator_required
+def add_album():
+    return render_template('albums/add.html',user=User.query.get(session['user_id']))
+
+@app.route('/albums/add', methods=['POST'])
+@creator_required
+def add_album_post():
+    title = request.form.get('title')
+    if title == '':
+        flash('Please enter a title')
+        return redirect(url_for('add_album'))
+    release_date = request.form.get('release_date')
+    if release_date:
+        try:
+            release_date = datetime.datetime.strptime(release_date, '%Y-%m-%d')
+        except ValueError:
+            flash('Invalid date format. Please use YYYY-MM-DD.')
+            return redirect(url_for('add_product'))
+        
+    genre = request.form.get('genre')
+    album = Album(title=title, release_date=release_date, genre=genre, creator_id=session['user_id'])
+    db.session.add(album)
+    db.session.commit()
+    flash('Album added successfully', 'success')
+    return redirect(url_for('creator_dashboard'))
 
 @app.route('/create_song', methods=['GET', 'POST'])
 @creator_required
@@ -241,22 +275,35 @@ def edit_song(song_id):
 
     return render_template('edit_song.html', song=song)
 
-@app.route('/remove_song/<int:song_id>', methods=['GET', 'POST'])
+@app.route('/albums/<int:album_id>/delete')
 @creator_required
-def remove_song(song_id):
-    song = Song.query.get(song_id)
+def delete_album(album_id):
+    return render_template('albums/delete.html', user=User.query.get(session['user_id']), album=Album.query.get(album_id))
 
-    if not song:
-        return "Song not found"
-
-    if request.method == 'POST':
-        # Remove the song from the database
-        db.session.delete(song)
-        db.session.commit()
-
-        flash('Song removed successfully', 'success')
+@app.route('/album/<int:album_id>/delete', methods=['POST'])
+@creator_required
+def delete_album_post(album_id):
+    # Retrieve the album with the given ID from the database
+    album = Album.query.get(album_id)
+    if not album:
+        flash('Album not found', 'error')
         return redirect(url_for('creator_dashboard'))
+    
+    if album.creator_id != session['user_id']:
+        flash('You do not have permission to delete this album', 'error')
+        return redirect(url_for('creator_dashboard'))
+    
+    db.session.delete(album)
+    db.session.commit()
+    flash('Album deleted successfully', 'success')
+    return redirect(url_for('creator_dashboard'))
 
-    return render_template('remove_song.html', song=song)
+@app.route('/albums/<int:album_id>/edit')
+@creator_required
+def edit_album(album_id):
+    pass
 
-
+@app.route('/albums/<int:album_id>/show')
+@creator_required
+def show_album(album_id):
+    pass

@@ -1,22 +1,68 @@
 {% extends 'layout.html' %}
-
 {% block title %}
     Creator Dashboard
 {% endblock %}
 
 {% block content %}
-    <h1>Creator Dashboard</h1>
+    <h1 class="text-center">Creator Dashboard</h1>
+    <div class="heading">
+        <h2 class="text-muted">Albums</h2>
+        <a class="btn btn-success" href="{{ url_for('add_album') }}">
+            <i class="fas fa-plus"></i>
+            Add Album
+        </a>
+    </div>
+    <table class="table table-bordered">
+        <thead class="bg-primary text-white">
+            <tr>
+                <th>Title</th>
+                <th>Release Date</th>
+                <th>Genre</th>
+                <th>Number Of Songs</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for album in albums %}
+                <tr>
+                    <td>{{ album.title }}</td>
+                    <td>{{ album.release_date }}</td>
+                    <td>{{ album.genre }}</td>
+                    <td>{{ album.songs|length }}</td>
+                    <td>
+                        <a class="btn btn-outline-info" href="{{ url_for('show_album', album_id=album.album_id) }}">
+                            <i class="fas fa-eye"></i>
+                            Show
+                        </a>
+                        <a class="btn btn-warning" href="{{ url_for('edit_album', album_id=album.album_id) }}">
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </a>
+                        <a class="btn btn-danger" href="{{ url_for('delete_album', album_id=album.album_id) }}">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block style %}
+<style>
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 
-    <h2>Your Songs</h2>
-    <ul>
-        {% for song in created_songs %}
-            <li>
-                {{ song.title }} by {{ song.artist }}
-                <a class="btn btn-success" href="{{ url_for('edit_song', song_id=song.song_id) }}">Edit</a>
-                <a class="btn btn-danger" href="{{ url_for('remove_song', song_id=song.song_id) }}">Remove</a>
-            </li>
-        {% endfor %}
-    </ul>
+    h1, h2 {
+        text-align: center;
+    }
 
-    <a class="btn btn-primary" href="{{ url_for('create_song') }}">Create New Song</a>
+    .btn i {
+        margin-right: 5px;
+    }
+</style>
 {% endblock %}
