@@ -34,6 +34,7 @@ class Song(db.Model):
     album_id = db.Column(db.Integer, db.ForeignKey('albums.album_id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
 
+
 class Album(db.Model):
     __tablename__ = 'albums'
     album_id = db.Column(db.Integer, primary_key=True)
@@ -41,6 +42,11 @@ class Album(db.Model):
     release_date = db.Column(db.Date)
     genre = db.Column(db.String(50), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+
+    songs = db.relationship('Song', backref='album', lazy=True)
+
+    def song_count(self):
+        return Song.query.filter_by(album_id=self.album_id).count()
 
 class Playlist(db.Model):
     __tablename__ = 'playlists'

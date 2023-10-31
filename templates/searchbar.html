@@ -1,0 +1,31 @@
+<div class="container-fluid">
+    <form class="d-flex">
+        <select name="parameter" id="parameter" class="form-select me-2">
+            <option value="Album"selected>Album Name</option> 
+        </select>
+        <input type="text" class="form-control me-2" id="query" name="query" placeholder="Search Query" value="{{name}}"> 
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="fas fa-search"></i>
+            Search
+        </button>
+    </form>
+</div>
+<style>
+    form{
+        margin-top: 30px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;        
+    }
+    #search{
+        margin-left: 10px;
+        margin-right: 10px;
+        width: 50%;
+    }
+    #parameter{
+        margin-left: 10px;
+        margin-right: 10px;
+        width: 20%;
+    }
+</style>

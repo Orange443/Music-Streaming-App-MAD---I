@@ -1,4 +1,13 @@
-<h1>hi</h1>
-<br>
-<h2>this will display your playsits
-</h2>
+<h3>Your Playlists</h3>
+<ul>
+    {% for playlist in playlists %}
+        <li>
+            <h4>{{ playlist.name }}</h4>
+            <ul>
+                {% for song in playlist.songs %}
+                    <li>{{ song.title }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+</ul>

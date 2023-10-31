@@ -1,0 +1,69 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Songs in {{album.title}} - Your Music App
+{% endblock %}
+
+{% block content %}
+    <h1>Songs in {{album.title}}</h1>
+    <br>
+    <div class="heading">
+        <h2 class="text-muted">Songs</h2>
+        <a class="btn btn-success" href="{{url_for('add_song', album_id=album.album_id)}}">
+            <i class="fas fa-plus"></i>
+            Add Song
+        </a>
+    </div>
+    <br>
+    <h5 class="text-info" style="font-style: italic;">
+        Following are the songs in {{album.title}}.
+    </h5>
+    <br>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Song ID</th>
+                <th>Song Title</th>
+                
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for song in album.songs %}
+                <tr>
+                    <td>{{ song.song_id }}</td>
+                    <td>{{ song.title }}</td>
+                    <td>
+                        <a class="btn btn-primary" href="{{url_for('edit_song', song_id=song.song_id)}}">
+                            <i class="fas fa-pencil-alt"></i> 
+                            Edit
+                        </a>
+                        <a class="btn btn-danger" href="{{url_for('delete_song', song_id=song.song_id)}}">
+                            <i class="fas fa-trash"></i> 
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block style %}
+<style>
+    .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    h1, h2 {
+        text-align: center;
+    }
+
+    .btn i {
+        margin-right: 5px;
+    }
+
+</style>
+{% endblock %}

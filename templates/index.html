@@ -1,10 +1,122 @@
 {% extends 'layout.html' %}
 
 {% block title %}
-    Tune Library 
+    Tune Library
 {% endblock %}
 
 {% block content %}
-<h1>hi</h1>
-<h2>{{ user.username }}!</h2>
+{% include 'searchbar.html' with context %}
+<div class="album-list">
+    {% for album in albums %}
+        <div class="album">
+            <h3>{{ album.title }}</h3>
+            <div class="song-list">
+                {% for song in album.songs %}
+                    <div class="song">
+                        <div class="song-info">
+                            <h4>{{ song.title }}</h4>
+                            <p>Artist: {{ song.artist }}</p>
+                            <p>Genre: {{ song.genre }}</p>
+                            <p>Lyrics: {{ song.lyrics }}</p>
+                        </div>
+                        
+                        <div class="button-container">
+                            <form method="POST" action="{{ url_for('rate_song', song_id=song.song_id) }}">
+                                <button type="submit" name="rating" value="like" class="btn btn-success">Like</button>
+                                <button type="submit" name="rating" value="dislike" class="btn btn-danger">Dislike</button>
+                            </form>
+
+                            <form method="POST" action="{{ url_for('add_to_playlist', song_id=song.song_id) }}">
+                                <button type="submit" class="btn btn-primary">Add to Playlist</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+    .album-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        background-color: #f4f4f4;
+        color: #333;
+    }
+
+    .album {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        margin: 10px;
+        width: calc(33.33% - 20px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .album h3 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .song {
+        border-top: 1px solid #ddd;
+        margin-top: 10px;
+        padding-top: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .song h4 {
+        font-size: 1.2rem;
+        color: #333;
+    }
+
+    .song p {
+        color: #666;
+    }
+
+    .buttons {
+        display: flex;
+        align-items: center;
+    }
+
+    .btn-success {
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+
+    .btn-danger {
+        background-color: #ff5733;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 10px;
+        
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+</style>
 {% endblock %}

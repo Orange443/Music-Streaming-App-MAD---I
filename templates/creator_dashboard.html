@@ -4,7 +4,9 @@
 {% endblock %}
 
 {% block content %}
+<br>
     <h1 class="text-center">Creator Dashboard</h1>
+    <br>
     <div class="heading">
         <h2 class="text-muted">Albums</h2>
         <a class="btn btn-success" href="{{ url_for('add_album') }}">
@@ -28,7 +30,7 @@
                     <td>{{ album.title }}</td>
                     <td>{{ album.release_date }}</td>
                     <td>{{ album.genre }}</td>
-                    <td>{{ album.songs|length }}</td>
+                    <td>{{ album.song_count() }}</td>
                     <td>
                         <a class="btn btn-outline-info" href="{{ url_for('show_album', album_id=album.album_id) }}">
                             <i class="fas fa-eye"></i>

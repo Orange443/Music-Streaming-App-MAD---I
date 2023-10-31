@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Edit Album - Your Music App
+{% endblock %}
+
+{% block style %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .form-container {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin: auto;
+        margin-top: 20px;
+        width: 500px;
+        margin-bottom: 20px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    label {
+        display: block;
+        margin-top: 10px;
+        color: #666;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    input[type="submit"] {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Edit Album</h1>
+    <hr>
+    <form method="post" class="form">
+        <label for="title" class="form-label">Title:
+            <input type="text" name="title" id="title" class="form-control" required value="{{album.title}}"/>
+        </label>
+        <label for="release_date" class="form-label">Release Date:
+            <input type="text" name="release_date" id="release_date" class="form-control" required value="{{album.release_date}}"/>
+        </label>
+        <label for="genre" class="form-label">Genre:
+            <input type="text" name="genre" id="genre" class="form-control" required value="{{album.genre}}"/>
+        </label>
+        <input type="submit" value="Save" class="btn btn-success">
+    </form>
+</div>
+{% endblock %}

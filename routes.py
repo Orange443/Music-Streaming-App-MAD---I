@@ -8,9 +8,6 @@ import time
 import re
 import datetime
 
-
-
-
 def auth_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
@@ -49,7 +46,8 @@ def creator_required(func):
 @app.route('/')
 @auth_required
 def index():
-    return render_template('index.html', user=User.query.get(session['user_id']))
+    return render_template('index.html', user=User.query.get(session['user_id']), albums=Album.query.all())
+
 
 @app.route('/login')
 def login():
@@ -93,12 +91,10 @@ def admin_login():
 @app.route('/admin_dashboard')
 @admin_reqequired
 def admin_dashboard():
-    # Check if the user is authenticated as an admin
     user_id = session.get('user_id')
     if user_id is not None:
         user = User.query.get(user_id)
         if user.is_admin:
-            # Gather and pass statistics to the template
             total_users = User.query.count()
             total_creators = User.query.filter_by(role='Creator').count()
             total_albums = Album.query.count()
@@ -173,11 +169,10 @@ def signup_as_creator():
 @app.route('/change_role_to_creator', methods=['POST'])
 @auth_required
 def change_role_to_creator():
-    # Get the current user
+    
     user = User.query.get(session['user_id'])
     created_songs = Song.query.filter_by(creator_id=session['user_id']).all()
     
-    # Change the user's role to 'Creator' and update the database
     user.role = 'Creator'
 
     db.session.commit()
@@ -236,13 +231,11 @@ def add_album_post():
 @creator_required
 def create_song():
     if request.method == 'POST':
-        # Retrieve data from the form
         title = request.form.get('title')
         artist = request.form.get('artist')
         lyrics = request.form.get('lyrics')
         genre = request.form.get('genre')
 
-        # Create a new Song object and add it to the database
         new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'])
         db.session.add(new_song)
         db.session.commit()
@@ -252,35 +245,15 @@ def create_song():
 
     return render_template('create_song.html')
 
-@app.route('/edit_song/<int:song_id>', methods=['GET', 'POST'])
-@creator_required
-def edit_song(song_id):
-    song = Song.query.get(song_id)
-
-    if not song:
-        return "Song not found"
-
-    if request.method == 'POST':
-        # Retrieve data from the form for editing
-        song.title = request.form.get('title')
-        song.artist = request.form.get('artist')
-        song.lyrics = request.form.get('lyrics')
-        song.genre = request.form.get('genre')
-
-        # Update the song in the database
-        db.session.commit()
-
-        flash('Song updated successfully', 'success')
-        return redirect(url_for('creator_dashboard'))
-
-    return render_template('edit_song.html', song=song)
 
 @app.route('/albums/<int:album_id>/delete')
 @creator_required
 def delete_album(album_id):
-    return render_template('albums/delete.html', user=User.query.get(session['user_id']), album=Album.query.get(album_id))
+    user=User.query.get(session['user_id'])
+    albums = user.created_albums
+    return render_template('albums/delete.html', user=user, albums=albums)
 
-@app.route('/album/<int:album_id>/delete', methods=['POST'])
+@app.route('/albums/<int:album_id>/delete', methods=['POST'])
 @creator_required
 def delete_album_post(album_id):
     # Retrieve the album with the given ID from the database
@@ -288,11 +261,7 @@ def delete_album_post(album_id):
     if not album:
         flash('Album not found', 'error')
         return redirect(url_for('creator_dashboard'))
-    
-    if album.creator_id != session['user_id']:
-        flash('You do not have permission to delete this album', 'error')
-        return redirect(url_for('creator_dashboard'))
-    
+
     db.session.delete(album)
     db.session.commit()
     flash('Album deleted successfully', 'success')
@@ -301,9 +270,159 @@ def delete_album_post(album_id):
 @app.route('/albums/<int:album_id>/edit')
 @creator_required
 def edit_album(album_id):
-    pass
+    return render_template('albums/edit.html', album=Album.query.get(album_id))
+
+@app.route('/albums/<int:album_id>/edit', methods=['POST'])
+@creator_required
+def edit_album_post(album_id):
+    
+    album = Album.query.get(album_id)
+    if not album:
+        flash('Album not found', 'error')
+        return redirect(url_for('creator_dashboard'))
+
+    new_title = request.form.get('title')
+    release_date_str = request.form.get('release_date')
+    new_genre = request.form.get('genre')
+
+    if not new_title or not release_date_str or not new_genre:
+        flash('Please fill out all fields', 'error')
+        return redirect(url_for('edit_album', album_id=album_id))
+
+    new_release_date = None
+
+    if release_date_str:
+        try:
+            new_release_date = datetime.datetime.strptime(release_date_str, '%Y-%m-%d')
+        except ValueError:
+            flash('Invalid date format. Please use YYYY-MM-DD.')
+            return redirect(url_for('add_product'))
+
+    album.title = new_title
+    album.release_date = new_release_date
+    album.genre = new_genre
+
+    db.session.commit()
+    
+    flash('Album updated successfully', 'success')
+    return redirect(url_for('creator_dashboard'))
+    
 
 @app.route('/albums/<int:album_id>/show')
-@creator_required
+@creator_required  
 def show_album(album_id):
-    pass
+    return render_template('albums/show.html',user=User.query.get(session['user_id']),album=Album.query.get(album_id))
+
+@app.route('/albums/<int:album_id>/songs/add', methods=['GET', 'POST'])
+@creator_required
+def add_song(album_id):
+    if request.method == 'POST':
+        title = request.form.get('title')
+        artist = request.form.get('artist')
+        lyrics = request.form.get('lyrics')
+        genre = request.form.get('genre')
+
+        new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], album_id=album_id)
+        db.session.add(new_song)
+        db.session.commit()
+
+        flash('New song created successfully', 'success')
+        return redirect(url_for('creator_dashboard'))
+
+    return render_template('songs/add.html',user=User.query.get(session['user_id']) , album_id=album_id)
+
+
+@app.route('/songs/<int:song_id>/delete')
+@creator_required
+def delete_song(song_id):
+    return render_template('songs/delete.html', song=Song.query.get(song_id))
+
+@app.route('/songs/<int:song_id>/delete', methods=['POST'])
+@creator_required
+def delete_song_post(song_id):
+    song = Song.query.get(song_id)
+    
+    if not song:
+        flash('Song not found', 'error')
+        return redirect(url_for('creator_dashboard'))
+
+    # Perform the deletion
+    db.session.delete(song)
+    db.session.commit()
+
+    flash('Song deleted successfully', 'success')
+    return redirect(url_for('creator_dashboard'))
+
+@app.route('/songs/<int:song_id>/edit')
+@creator_required
+def edit_song(song_id):
+    return render_template('songs/edit.html', song=Song.query.get(song_id))
+
+@app.route('/songs/<int:song_id>/edit', methods=['POST'])
+@creator_required
+def edit_song_post(song_id):
+    song = Song.query.get(song_id)
+    
+    if not song:
+        flash('Song not found', 'error')
+        return redirect(url_for('creator_dashboard'))
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        artist = request.form.get('artist')
+        lyrics = request.form.get('lyrics')
+        genre = request.form.get('genre')
+
+        # Update the song attributes
+        song.title = title
+        song.artist = artist
+        song.lyrics = lyrics
+        song.genre = genre
+
+        db.session.commit()
+
+        flash('Song updated successfully', 'success')
+        return redirect(url_for('creator_dashboard'))
+    
+    return render_template('songs/edit.html', song=song)
+
+@app.route('/songs/<int:song_id>/rate', methods=['POST'])
+def rate_song(song_id):
+    rating = request.form['rating']
+    song = Song.query.get(song_id)
+    
+    if rating == 'like':
+        song.rating += 1
+    elif rating == 'dislike':
+        song.rating -= 1
+    
+    db.session.commit()
+    
+    flash(f'Song rated {rating} successfully', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/index')
+def index_home():
+    return redirect(url_for('index'))
+
+@app.route('/add_to_playlist/<int:song_id>', methods=['POST'])
+@auth_required
+def add_to_playlist(song_id):
+    # Fetch the song from the database
+    song = Song.query.get(song_id)
+    
+    # Get the user's playlists, and add the song to one of them
+    playlist_id = request.form.get('playlist_id')
+    playlist = Playlist.query.get(playlist_id)
+    if playlist:
+        playlist.songs.append(song)
+        db.session.commit()
+    
+    return redirect(url_for('your_playlists'))
+
+@app.route('/playlists')
+@auth_required
+def playlist():
+    user = User.query.get(session['user_id'])
+    playlists = user.playlists
+    return render_template('your_playlists.html', user=user, playlists=playlists)

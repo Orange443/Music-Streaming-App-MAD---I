@@ -10,6 +10,10 @@
             <ul class="navbar-nav ml-auto">
                 {% if user is defined and user.role == 'User' %}                   
                 <li class="nav-item"> 
+                    <a class="nav-link" href="/index">Home</a>
+                </li>
+                
+                <li class="nav-item"> 
                     <a class="nav-link" href="/signup_as_creator">Signup as creator</a>
                 </li>
                 <li class="nav-item"> 
@@ -19,6 +23,9 @@
                     <a class="nav-link" href="/logout">Logout</a>
                 </li> 
                 {% elif user is defined and user.role == 'Creator' %}
+                <li class="nav-item"> 
+                    <a class="nav-link" href="/index">Home</a>
+                </li>
                 <li class="nav-item"> 
                     <a class="nav-link" href="/your_playlists">Your Playlists</a>
                 </li>
