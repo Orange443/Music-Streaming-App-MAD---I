@@ -12,7 +12,7 @@ def auth_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.')
+            flash('You must be logged in to access this page.', "error")
             return redirect(url_for('login')) 
         return func(*args, **kwargs)
     return inner
@@ -21,11 +21,11 @@ def admin_reqequired(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.')
+            flash('You must be logged in to access this page.', "error")
             return redirect(url_for('login')) 
         user = User.query.get(session['user_id'])
         if not user.is_admin:
-            flash('You must be an admin to access this page.')
+            flash('You must be an admin to access this page.', "error")
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
@@ -34,11 +34,11 @@ def creator_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.')
+            flash('You must be logged in to access this page.', "error")
             return redirect(url_for('login')) 
         user = User.query.get(session['user_id'])
         if not user.role == 'Creator':
-            flash('You must be a creator to access this page.')
+            flash('You must be a creator to access this page.', "error")
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
@@ -60,17 +60,17 @@ def login_post():
     admin_login = request.form.get('admin_login')
 
     if username == '' or password == '':
-        flash('Please fill out all fields')
+        flash('Please fill out all fields', "error")
         return redirect(url_for('login'))
     
     if username == 'admin':
-        flash('If you are an admin, please log in as an admin using the admin login page.')
+        flash('If you are an admin, please log in as an admin using the admin login page.', "error")
         return redirect(url_for('login'))
 
     user = User.query.filter_by(username=username).first()
 
     if not user or not user.check_password(password):
-        flash('Invalid username or password')
+        flash('Invalid username or password', "error")
         return redirect(url_for('login'))
 
     if admin_login:
@@ -78,7 +78,7 @@ def login_post():
             session['user_id'] = user.user_id
             return redirect(url_for('admin_dashboard'))
         else:
-            flash('You are not authorized to access the admin panel.')
+            flash('You are not authorized to access the admin panel.', "error")
             return redirect(url_for('login'))
 
     session['user_id'] = user.user_id
@@ -107,7 +107,7 @@ def admin_dashboard():
                 total_creators=total_creators, 
                 total_albums=total_albums)  
     
-    flash('You are not authorized to access the admin dashboard.')
+    flash('You are not authorized to access the admin dashboard.', "error")
     return redirect(url_for('login'))
 
 @app.route('/admin_login', methods=['POST'])
@@ -116,13 +116,13 @@ def admin_login_post():
     password = request.form.get('password')
 
     if username == '' or password == '':
-        flash('Please fill out all fields')
+        flash('Please fill out all fields', "error")
         return redirect(url_for('admin_login'))
 
     admin_user = User.query.filter_by(username=username, is_admin=True).first()
 
     if not admin_user or not admin_user.check_password(password):
-        flash('Invalid admin username or password')
+        flash('Invalid admin username or password', "error")
         return redirect(url_for('admin_login'))
 
     session['user_id'] = admin_user.user_id
@@ -139,13 +139,13 @@ def register_post():
     confirm_password = request.form.get('confirm_password')
     role = request.form.get('role') 
     if username == '' or password == '' or confirm_password == '' or not role:
-        flash('Please fill out all fields and select a role')
+        flash('Please fill out all fields and select a role', "error")
         return redirect('register')
     if password != confirm_password:
-        flash('Password and confirm password do not match. Please try again.')
+        flash('Password and confirm password do not match. Please try again.', "error")
         return redirect('register')
     if User.query.filter_by(username=username).first():
-        flash('Username already in use. Please choose a different username.')
+        flash('Username already in use. Please choose a different username.', "error")
         return redirect('register')
 
     user = User(username=username, role=role)  
@@ -153,7 +153,7 @@ def register_post():
     db.session.add(user)
     db.session.commit()
 
-    flash('Registration successful. You can now log in.')
+    flash('Registration successful. You can now log in.', "success")
     return redirect(url_for('login'))
 
 '''@app.route('/signup_as_creator')
@@ -164,7 +164,8 @@ def signup_as_creator():
 @app.route('/signup_as_creator', methods=['GET'])
 @auth_required
 def signup_as_creator():
-    return render_template('signup_as_creator.html')
+    user = User.query.get(session['user_id'])
+    return render_template('signup_as_creator.html', user=user)
 
 @app.route('/change_role_to_creator', methods=['POST'])
 @auth_required
@@ -177,14 +178,17 @@ def change_role_to_creator():
 
     db.session.commit()
     
-    flash('Congratulations! You are now a Creator.', 'success')
+    flash('Congratulations! You are now a Creator.', "success")
     return redirect(url_for('index'))
 
 
 @app.route('/your_playlists')
 @auth_required
 def your_playlists():
-    return render_template('your_playlists.html')  
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    playlist_entry = Playlist.query.filter_by(user_id=user_id)
+    return render_template('your_playlists.html', user=user, playlist=playlist_entry)  
 
 @app.route('/creator_dashboard')
 @creator_required
@@ -197,7 +201,7 @@ def creator_dashboard():
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
-    flash('You have been logged out.')
+    flash('You have been logged out.', "success")
     return redirect(url_for('login'))
 
 @app.route('/albums/add')
@@ -210,14 +214,14 @@ def add_album():
 def add_album_post():
     title = request.form.get('title')
     if title == '':
-        flash('Please enter a title')
+        flash('Please enter a title', "success")
         return redirect(url_for('add_album'))
     release_date = request.form.get('release_date')
     if release_date:
         try:
             release_date = datetime.datetime.strptime(release_date, '%Y-%m-%d')
         except ValueError:
-            flash('Invalid date format. Please use YYYY-MM-DD.')
+            flash('Invalid date format. Please use YYYY-MM-DD.', "success")
             return redirect(url_for('add_product'))
         
     genre = request.form.get('genre')
@@ -270,7 +274,8 @@ def delete_album_post(album_id):
 @app.route('/albums/<int:album_id>/edit')
 @creator_required
 def edit_album(album_id):
-    return render_template('albums/edit.html', album=Album.query.get(album_id))
+    user = User.query.get(session['user_id'])
+    return render_template('albums/edit.html', album=Album.query.get(album_id), user=user)
 
 @app.route('/albums/<int:album_id>/edit', methods=['POST'])
 @creator_required
@@ -295,7 +300,7 @@ def edit_album_post(album_id):
         try:
             new_release_date = datetime.datetime.strptime(release_date_str, '%Y-%m-%d')
         except ValueError:
-            flash('Invalid date format. Please use YYYY-MM-DD.')
+            flash('Invalid date format. Please use YYYY-MM-DD.', "error")
             return redirect(url_for('add_product'))
 
     album.title = new_title
@@ -356,7 +361,8 @@ def delete_song_post(song_id):
 @app.route('/songs/<int:song_id>/edit')
 @creator_required
 def edit_song(song_id):
-    return render_template('songs/edit.html', song=Song.query.get(song_id))
+    user = User.query.get(session['user_id'])
+    return render_template('songs/edit.html', song=Song.query.get(song_id), user=user)
 
 @app.route('/songs/<int:song_id>/edit', methods=['POST'])
 @creator_required
@@ -411,6 +417,11 @@ def add_to_playlist(song_id):
     
     user_id = session['user_id']   
     song = Song.query.get(song_id)
+
+    in_db_playlist = Playlist.query.filter_by(user_id=user_id, song_id=song_id).first()
+    if in_db_playlist is not None:
+        raise Exception("Playlist ENtry is already made")
+
 
     if song is not None:
         
