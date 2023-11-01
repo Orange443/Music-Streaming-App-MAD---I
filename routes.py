@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from models import db, User, Song, Album, Playlist, PlaylistSong, CreatorBlacklist
+from models import db, User, Song, Album, Playlist, CreatorBlacklist
 from app import app
 from sqlalchemy import func, distinct
 from werkzeug.security import check_password_hash
@@ -406,23 +406,25 @@ def index_home():
     return redirect(url_for('index'))
 
 @app.route('/add_to_playlist/<int:song_id>', methods=['POST'])
-@auth_required
+@auth_required  
 def add_to_playlist(song_id):
-    # Fetch the song from the database
+    
+    user_id = session['user_id']   
     song = Song.query.get(song_id)
-    
-    # Get the user's playlists, and add the song to one of them
-    playlist_id = request.form.get('playlist_id')
-    playlist = Playlist.query.get(playlist_id)
-    if playlist:
-        playlist.songs.append(song)
-        db.session.commit()
-    
-    return redirect(url_for('your_playlists'))
 
-@app.route('/playlists')
+    if song is not None:
+        
+        playlist_entry = Playlist(user_id=user_id, song_id=song_id)
+        db.session.add(playlist_entry)
+        db.session.commit()
+
+    return redirect(url_for('your_playlists')) 
+
+@app.route('/playlists/<int:song_id>')
 @auth_required
-def playlist():
+def your_playlists_1(song_id):
     user = User.query.get(session['user_id'])
-    playlists = user.playlists
-    return render_template('your_playlists.html', user=user, playlists=playlists)
+    playlist = Playlist.query.filter(Playlist.user_id == session['user_id']).all()
+    return render_template('your_playlists.html', user=user, playlist=playlist, song_id=song_id)
+
+

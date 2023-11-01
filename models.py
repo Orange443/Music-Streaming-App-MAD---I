@@ -34,6 +34,8 @@ class Song(db.Model):
     album_id = db.Column(db.Integer, db.ForeignKey('albums.album_id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
 
+    playlist = db.relationship('Playlist', backref='song', lazy=True)
+
 
 class Album(db.Model):
     __tablename__ = 'albums'
@@ -51,14 +53,9 @@ class Album(db.Model):
 class Playlist(db.Model):
     __tablename__ = 'playlists'
     playlist_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
-
-class PlaylistSong(db.Model):
-    __tablename__ = 'playlist_songs'
-    id = db.Column(db.Integer, primary_key=True)
-    playlist_id = db.Column(db.Integer, db.ForeignKey('playlists.playlist_id'))
     song_id = db.Column(db.Integer, db.ForeignKey('songs.song_id'))
+
 
 class CreatorBlacklist(db.Model):
     __tablename__ = 'creator_blacklist'
