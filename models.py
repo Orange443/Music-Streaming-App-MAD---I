@@ -33,6 +33,7 @@ class Song(db.Model):
     rating = db.Column(db.Float, nullable=False, default=0.0)
     album_id = db.Column(db.Integer, db.ForeignKey('albums.album_id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
+    is_flag = db.Column(db.Boolean, nullable=False, default=False)
 
     playlist = db.relationship('Playlist', backref='song', lazy=True)
 

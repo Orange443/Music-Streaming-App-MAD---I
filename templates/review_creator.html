@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Review Creators
+{% endblock %}
+
+{% block content %}
+    <h2>Review Creators</h2>
+    <p>Welcome, {{ user.username }}!</p>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Creator Name</th>
+                <th>Number of Albums</th>
+                <th>Number of Songs</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for creator in creators %}
+                <tr>
+                    <td>{{ creator.username }}</td>
+                    <td>{{ creator.created_albums|length }}</td>
+                    <td>{{ creator.created_songs|length }}</td>
+                    <td>
+                        <div class="button-container">
+                            <form method="POST" action="/blacklist_creator/{{ creator.user_id }}">
+                                <button type="submit" class="btn btn-danger">Blacklist</button>
+                            </form>
+                            <form method="POST" action="/whitelist_creator/{{ creator.user_id }}">
+                                <button type="submit" class="btn btn-success">Whitelist</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+    
+    .button-container {
+        display: flex;
+      }
+
+    .btn-success {
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .btn-danger {
+        display: inline-block;
+        margin-right: 10px;
+        background-color: #ff5733;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+

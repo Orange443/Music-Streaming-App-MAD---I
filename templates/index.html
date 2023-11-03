@@ -21,14 +21,22 @@
                         </div>
                         
                         <div class="button-container">
-                            <form method="POST" action="{{ url_for('rate_song', song_id=song.song_id) }}">
-                                <button type="submit" name="rating" value="like" class="btn btn-success">Like</button>
-                                <button type="submit" name="rating" value="dislike" class="btn btn-danger">Dislike</button>
-                            </form>
-
-                            <form method="POST" action="{{ url_for('add_to_playlist', song_id=song.song_id) }}">
-                                <button type="submit" class="btn btn-primary">Add to Playlist</button>
-                            </form>
+                                <form method="POST" action="{{ url_for('rate_song', song_id=song.song_id) }}">
+                                    {% if song.is_flag %}
+                                    <button type="submit" name="rating" value="like" class="btn btn-success" disabled>Like</button>
+                                    <button type="submit" name="rating" value="dislike" class="btn btn-danger" disabled>Dislike</button>
+                                    {% else %}
+                                    <button type="submit" name="rating" value="like" class="btn btn-success">Like</button>
+                                    <button type="submit" name="rating" value="dislike" class="btn btn-danger">Dislike</button>
+                                    {% endif %}
+                                </form>
+                                <form method="POST" action="{{ url_for('add_to_playlist', song_id=song.song_id) }}">
+                                    {% if song.is_flag %}
+                                    <button type="submit" class="btn btn-primary"disabled>Add to Playlist</button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-primary">Add to Playlist</button>
+                                    {% endif %}
+                                </form>
                         </div>
                     </div>
                 {% endfor %}
@@ -85,6 +93,7 @@
         display: flex;
         align-items: center;
     }
+    
 
     .btn-success {
         background-color: #4caf50;
@@ -117,6 +126,19 @@
         border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
+        margin-right: 10px;
+    }
+    
+    .btn-disabled {
+        background-color: #ccc; /* Grey tone */
+        color: #666; /* Text color */
+        padding: 8px 16px;
+        border: none;
+        border-radius: 100px;
+        cursor: not-allowed; /* Disabled cursor */
+        font-size: 14px;
+        margin-right: 10px;
+        margin-left: 50px;
     }
 </style>
 {% endblock %}

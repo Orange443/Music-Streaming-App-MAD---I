@@ -1,0 +1,107 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Flagged Songs
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1 class="page-title">All Songs</h1>
+    <div class="song-list">
+      {% for song in all_songs %}
+        <div class="song-card">
+          <h2>{{ song.title }}</h2>
+          <p class="artist">Artist: {{ song.artist }}</p>
+          <p class="genre">Genre: {{ song.genre }}</p>
+          <p class="flag-status">{{ 'Flagged' if song.is_flag else 'Not Flagged' }}</p>
+          <div class="actions">
+            <form action="{{ url_for('unflag_song', song_id=song.song_id) }}" method="post">
+              <button type="submit" name="flagging" value="unflag" class="btn btn-warning">Unflag</button>
+            </form>
+            <form action="{{ url_for('flag_song', song_id=song.song_id) }}" method="post">
+              <button type="submit" name="flagging" value="flag" class="btn btn-warning">Flag</button>
+            </form>
+            <form action="{{ url_for('remove_song', song_id=song.song_id) }}" method="post">
+              <button type="submit" class="btn btn-outline-danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block style %}
+<style>
+    body {
+        background-color: #c3e6e8; /* Pastel Blue Color */
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-title {
+        color: rgb(70, 109, 236);
+    }
+
+    .song-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .song-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 20px;
+        margin: 10px;
+        width: calc(33.33% - 20px);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        color: #333;
+    }
+
+    .artist, .genre, .flag-status {
+        color: #666;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+
+    .actions form {
+        margin-right: 10px; /* Add space between buttons */
+    }
+
+    .btn.btn-warning {
+        background-color: #33a3ff;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 9px;
+        cursor: pointer;
+    }
+
+    .btn.btn-outline-danger {
+        background-color: #eee;
+        color: #999;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

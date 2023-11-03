@@ -12,7 +12,6 @@
                 <li class="nav-item"> 
                     <a class="nav-link" href="/index">Home</a>
                 </li>
-                
                 <li class="nav-item"> 
                     <a class="nav-link" href="/signup_as_creator">Signup as creator</a>
                 </li>
@@ -37,10 +36,10 @@
                 </li> 
                 {% elif user is defined and user.role == 'Admin' %}
                 <li class="nav-item"> 
-                    <a class="nav-link" href="/review_songs">Review Songs</a>
+                    <a class="nav-link" href="/flagged_songs">Flag Songs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="/creator_review">Review Creator</a>
+                    <a class="nav-link" href="/review_creator">Review Creator</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">Logout</a>

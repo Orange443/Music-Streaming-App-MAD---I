@@ -12,7 +12,7 @@ def auth_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.', "error")
+            flash('You must be logged in to access this page.', "danger")
             return redirect(url_for('login')) 
         return func(*args, **kwargs)
     return inner
@@ -21,11 +21,11 @@ def admin_reqequired(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.', "error")
+            flash('You must be logged in to access this page.', "danger")
             return redirect(url_for('login')) 
         user = User.query.get(session['user_id'])
         if not user.is_admin:
-            flash('You must be an admin to access this page.', "error")
+            flash('You must be an admin to access this page.', "danger")
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
@@ -34,11 +34,11 @@ def creator_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must be logged in to access this page.', "error")
+            flash('You must be logged in to access this page.', "danger")
             return redirect(url_for('login')) 
         user = User.query.get(session['user_id'])
         if not user.role == 'Creator':
-            flash('You must be a creator to access this page.', "error")
+            flash('You must be a creator to access this page.', "danger")
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
@@ -46,8 +46,30 @@ def creator_required(func):
 @app.route('/')
 @auth_required
 def index():
-    return render_template('index.html', user=User.query.get(session['user_id']), albums=Album.query.all())
+    user=User.query.get(session['user_id'])
+    user_id = session.get('user_id')
+    parameter = request.args.get('parameter')
+    query = request.args.get('query')
+    blacklist_creator = CreatorBlacklist.query.filter_by(creator_id=user_id).first()
+    creator_blacklist_entries = db.session.query(CreatorBlacklist.creator_id).all()
+    creator_id_list = [entry[0] for entry in creator_blacklist_entries]
+    albums = db.session.query(Album.album_id).filter(~Album.creator_id.in_(creator_id_list)).all()
+    album_id_list = [album[0] for album in albums]
+    albums = Album.query.filter(Album.album_id.in_(album_id_list)).all()
 
+    if blacklist_creator:
+        flash('You have been blacklisted ', "danger")
+        return redirect(url_for('login'))
+
+    else:
+        if not parameter or not query:
+            return render_template('index.html', user=user, albums=albums)
+
+        if parameter == 'Album':
+            albums = Album.query.filter(Album.title.ilike('%' + query + '%')).filter(Album.album_id.in_(album_id_list)).all()
+            return render_template('index.html', user=user, albums=albums)
+        
+        return render_template('index.html', user=user, album=Album.query.all())
 
 @app.route('/login')
 def login():
@@ -60,17 +82,17 @@ def login_post():
     admin_login = request.form.get('admin_login')
 
     if username == '' or password == '':
-        flash('Please fill out all fields', "error")
+        flash('Please fill out all fields', "danger")
         return redirect(url_for('login'))
     
     if username == 'admin':
-        flash('If you are an admin, please log in as an admin using the admin login page.', "error")
+        flash('If you are an admin, please log in as an admin using the admin login page.', "danger")
         return redirect(url_for('login'))
 
     user = User.query.filter_by(username=username).first()
 
     if not user or not user.check_password(password):
-        flash('Invalid username or password', "error")
+        flash('Invalid username or password', "danger")
         return redirect(url_for('login'))
 
     if admin_login:
@@ -78,7 +100,7 @@ def login_post():
             session['user_id'] = user.user_id
             return redirect(url_for('admin_dashboard'))
         else:
-            flash('You are not authorized to access the admin panel.', "error")
+            flash('You are not authorized to access the admin panel.', "danger")
             return redirect(url_for('login'))
 
     session['user_id'] = user.user_id
@@ -107,7 +129,7 @@ def admin_dashboard():
                 total_creators=total_creators, 
                 total_albums=total_albums)  
     
-    flash('You are not authorized to access the admin dashboard.', "error")
+    flash('You are not authorized to access the admin dashboard.', "danger")
     return redirect(url_for('login'))
 
 @app.route('/admin_login', methods=['POST'])
@@ -116,13 +138,13 @@ def admin_login_post():
     password = request.form.get('password')
 
     if username == '' or password == '':
-        flash('Please fill out all fields', "error")
+        flash('Please fill out all fields', "danger")
         return redirect(url_for('admin_login'))
 
     admin_user = User.query.filter_by(username=username, is_admin=True).first()
 
     if not admin_user or not admin_user.check_password(password):
-        flash('Invalid admin username or password', "error")
+        flash('Invalid admin username or password', "danger")
         return redirect(url_for('admin_login'))
 
     session['user_id'] = admin_user.user_id
@@ -139,13 +161,13 @@ def register_post():
     confirm_password = request.form.get('confirm_password')
     role = request.form.get('role') 
     if username == '' or password == '' or confirm_password == '' or not role:
-        flash('Please fill out all fields and select a role', "error")
+        flash('Please fill out all fields and select a role', "danger")
         return redirect('register')
     if password != confirm_password:
-        flash('Password and confirm password do not match. Please try again.', "error")
+        flash('Password and confirm password do not match. Please try again.', "danger")
         return redirect('register')
     if User.query.filter_by(username=username).first():
-        flash('Username already in use. Please choose a different username.', "error")
+        flash('Username already in use. Please choose a different username.', "danger")
         return redirect('register')
 
     user = User(username=username, role=role)  
@@ -188,7 +210,12 @@ def your_playlists():
     user_id = session['user_id']
     user = User.query.get(user_id)
     playlist_entry = Playlist.query.filter_by(user_id=user_id)
-    return render_template('your_playlists.html', user=user, playlist=playlist_entry)  
+    blacklist_creator = CreatorBlacklist.query.filter_by(creator_id=user_id).first()
+    if blacklist_creator:
+        flash('You have been blacklisted from creating playlists.', "danger")
+        return redirect(url_for('index'))
+    else:
+        return render_template('your_playlists.html', user=user, playlist=playlist_entry)  
 
 @app.route('/creator_dashboard')
 @creator_required
@@ -221,8 +248,8 @@ def add_album_post():
         try:
             release_date = datetime.datetime.strptime(release_date, '%Y-%m-%d')
         except ValueError:
-            flash('Invalid date format. Please use YYYY-MM-DD.', "success")
-            return redirect(url_for('add_product'))
+            flash('Invalid date format. Please use YYYY-MM-DD.', "danger")
+            return redirect(url_for('index'))
         
     genre = request.form.get('genre')
     album = Album(title=title, release_date=release_date, genre=genre, creator_id=session['user_id'])
@@ -283,7 +310,7 @@ def edit_album_post(album_id):
     
     album = Album.query.get(album_id)
     if not album:
-        flash('Album not found', 'error')
+        flash('Album not found', 'danger')
         return redirect(url_for('creator_dashboard'))
 
     new_title = request.form.get('title')
@@ -291,7 +318,7 @@ def edit_album_post(album_id):
     new_genre = request.form.get('genre')
 
     if not new_title or not release_date_str or not new_genre:
-        flash('Please fill out all fields', 'error')
+        flash('Please fill out all fields', 'danger')
         return redirect(url_for('edit_album', album_id=album_id))
 
     new_release_date = None
@@ -300,7 +327,7 @@ def edit_album_post(album_id):
         try:
             new_release_date = datetime.datetime.strptime(release_date_str, '%Y-%m-%d')
         except ValueError:
-            flash('Invalid date format. Please use YYYY-MM-DD.', "error")
+            flash('Invalid date format. Please use YYYY-MM-DD.', "danger")
             return redirect(url_for('add_product'))
 
     album.title = new_title
@@ -348,7 +375,7 @@ def delete_song_post(song_id):
     song = Song.query.get(song_id)
     
     if not song:
-        flash('Song not found', 'error')
+        flash('Song not found', 'danger')
         return redirect(url_for('creator_dashboard'))
 
     # Perform the deletion
@@ -370,7 +397,7 @@ def edit_song_post(song_id):
     song = Song.query.get(song_id)
     
     if not song:
-        flash('Song not found', 'error')
+        flash('Song not found', 'danger')
         return redirect(url_for('creator_dashboard'))
 
     if request.method == 'POST':
@@ -409,6 +436,7 @@ def rate_song(song_id):
 
 @app.route('/index')
 def index_home():
+
     return redirect(url_for('index'))
 
 @app.route('/add_to_playlist/<int:song_id>', methods=['POST'])
@@ -420,11 +448,9 @@ def add_to_playlist(song_id):
 
     in_db_playlist = Playlist.query.filter_by(user_id=user_id, song_id=song_id).first()
     if in_db_playlist is not None:
-        raise Exception("Playlist ENtry is already made")
-
-
+        flash("Playlist Entry is already made", "danger")
+        return redirect(url_for('index'))
     if song is not None:
-        
         playlist_entry = Playlist(user_id=user_id, song_id=song_id)
         db.session.add(playlist_entry)
         db.session.commit()
@@ -438,4 +464,75 @@ def your_playlists_1(song_id):
     playlist = Playlist.query.filter(Playlist.user_id == session['user_id']).all()
     return render_template('your_playlists.html', user=user, playlist=playlist, song_id=song_id)
 
+
+@app.route('/flagged_songs')
+@admin_reqequired
+def flagged_songs():
+    user = User.query.get(session['user_id'])
+    all_songs = Song.query.all()
+    return render_template('flagged_songs.html', all_songs=all_songs, user=user)
+
+@app.route('/flag_song/<int:song_id>', methods=['POST'])
+@admin_reqequired
+def flag_song(song_id):
+    song = Song.query.get(song_id)
+    if song:
+        song.is_flag = True
+        db.session.commit()
+    return redirect(url_for('flagged_songs'))
+
+@app.route('/unflag_song/<int:song_id>', methods=['POST'])
+@admin_reqequired
+def unflag_song(song_id):
+    song = Song.query.get(song_id)
+    if song:
+        song.is_flag = False
+        db.session.commit()
+    return redirect(url_for('flagged_songs'))
+
+@app.route('/remove_song/<int:song_id>', methods=['POST'])
+@admin_reqequired
+def remove_song(song_id):
+    song = Song.query.get(song_id)
+    if song:
+        db.session.delete(song)
+        db.session.commit()
+    return redirect(url_for('flagged_songs'))
+
+@app.route('/review_creator')
+@admin_reqequired
+def review_creator(): 
+    user = User.query.get(session['user_id'])
+    creators = User.query.filter_by(role='Creator').all()
+    return render_template('review_creator.html', user=user, creators=creators)
+
+
+@app.route('/blacklist_creator/<int:creator_id>', methods=['POST'])
+def blacklist_creator(creator_id):
+    admin_id = session['user_id'] 
+ 
+    
+    creator_blacklist = CreatorBlacklist.query.filter_by(admin_id=admin_id, creator_id=creator_id).first()
+    if creator_blacklist:
+        flash('Creator is already blacklisted.', 'danger')
+    else:
+        creator_blacklist = CreatorBlacklist(admin_id=admin_id, creator_id=creator_id)
+        db.session.add(creator_blacklist)
+        db.session.commit()
+        flash('Creator has been blacklisted.', 'success')
+ 
+    return redirect(url_for('review_creator'))
+ 
+# Route to whitelist a creator
+@app.route('/whitelist_creator/<int:creator_id>', methods=['POST'])
+def whitelist_creator(creator_id):
+    admin_id = session['user_id']  
+    creator_blacklist = CreatorBlacklist.query.filter_by(admin_id=admin_id, creator_id=creator_id).first()
+    if creator_blacklist:
+        db.session.delete(creator_blacklist)
+        db.session.commit()
+        flash('Creator has been whitelisted.','success')
+    else:
+        flash('Creator was not blacklisted.','danger')
+    return redirect(url_for('review_creator'))
 
