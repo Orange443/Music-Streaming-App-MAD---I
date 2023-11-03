@@ -19,24 +19,27 @@
                             <p>Genre: {{ song.genre }}</p>
                             <p>Lyrics: {{ song.lyrics }}</p>
                         </div>
-                        
+                        <audio controls>
+                            <source src="{% if song.filename %}{{ url_for('uploads', filename='uploads/' + song.filename) }}{% endif %}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
                         <div class="button-container">
-                                <form method="POST" action="{{ url_for('rate_song', song_id=song.song_id) }}">
-                                    {% if song.is_flag %}
-                                    <button type="submit" name="rating" value="like" class="btn btn-success" disabled>Like</button>
-                                    <button type="submit" name="rating" value="dislike" class="btn btn-danger" disabled>Dislike</button>
-                                    {% else %}
-                                    <button type="submit" name="rating" value="like" class="btn btn-success">Like</button>
-                                    <button type="submit" name="rating" value="dislike" class="btn btn-danger">Dislike</button>
-                                    {% endif %}
-                                </form>
-                                <form method="POST" action="{{ url_for('add_to_playlist', song_id=song.song_id) }}">
-                                    {% if song.is_flag %}
-                                    <button type="submit" class="btn btn-primary"disabled>Add to Playlist</button>
-                                    {% else %}
-                                    <button type="submit" class="btn btn-primary">Add to Playlist</button>
-                                    {% endif %}
-                                </form>
+                            <form method="POST" action="{{ url_for('rate_song', song_id=song.song_id) }}">
+                                {% if song.is_flag %}
+                                <button type="submit" name="rating" value="like" class="btn btn-success" disabled>Like</button>
+                                <button type="submit" name="rating" value="dislike" class="btn btn-danger" disabled>Dislike</button>
+                                {% else %}
+                                <button type="submit" name="rating" value="like" class="btn btn-success">Like</button>
+                                <button type="submit" name="rating" value="dislike" class="btn btn-danger">Dislike</button>
+                                {% endif %}
+                            </form>
+                            <form method="POST" action="{{ url_for('add_to_playlist', song_id=song.song_id) }}">
+                                {% if song.is_flag %}
+                                <button type="submit" class="btn btn-primary" disabled>Add to Playlist</button>
+                                {% else %}
+                                <button type="submit" class="btn btn-primary">Add to Playlist</button>
+                                {% endif %}
+                            </form>
                         </div>
                     </div>
                 {% endfor %}
@@ -89,11 +92,14 @@
         color: #666;
     }
 
-    .buttons {
+    audio {
+        width: 100%;
+    }
+
+    .button-container {
         display: flex;
         align-items: center;
     }
-    
 
     .btn-success {
         background-color: #4caf50;
@@ -128,14 +134,14 @@
         font-size: 14px;
         margin-right: 10px;
     }
-    
+
     .btn-disabled {
-        background-color: #ccc; /* Grey tone */
-        color: #666; /* Text color */
+        background-color: #ccc; 
+        color: #666; 
         padding: 8px 16px;
         border: none;
         border-radius: 100px;
-        cursor: not-allowed; /* Disabled cursor */
+        cursor: not-allowed; 
         font-size: 14px;
         margin-right: 10px;
         margin-left: 50px;

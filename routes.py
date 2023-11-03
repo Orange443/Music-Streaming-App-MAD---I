@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from models import db, User, Song, Album, Playlist, CreatorBlacklist
 from app import app
 from sqlalchemy import func, distinct
+import os
+from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 import time
 import re
@@ -258,6 +260,24 @@ def add_album_post():
     flash('Album added successfully', 'success')
     return redirect(url_for('creator_dashboard'))
 
+ALLOWED_EXTENSIONS = {'mp3'}
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+#---------- Function to check if the file extension is allowed-------#
+def allowed_song_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+#------------ Function to save the uploaded song file----------------#
+def save_song_file(file):
+    if file and allowed_song_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        file.save(file_path)
+        return file_path
+    else:
+        return None
+
 @app.route('/create_song', methods=['GET', 'POST'])
 @creator_required
 def create_song():
@@ -266,15 +286,35 @@ def create_song():
         artist = request.form.get('artist')
         lyrics = request.form.get('lyrics')
         genre = request.form.get('genre')
+        
+        song_file = request.files['song_file']
 
-        new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'])
-        db.session.add(new_song)
-        db.session.commit()
+        if not title or not artist or not lyrics or not genre or not song_file:
+            flash('Please fill out all fields, including the song file', 'danger')
+        else:
+            if allowed_song_file(song_file.filename):
+                song_path = save_song_file(song_file)
+                new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], song_path=song_path)
+                db.session.add(new_song)
+                db.session.commit()
 
-        flash('New song created successfully', 'success')
-        return redirect(url_for('creator_dashboard'))
+                flash('New song created successfully', 'success')
+                return redirect(url_for('creator_dashboard'))
+            else:
+                flash('Invalid file type. Please upload an MP3 file.', 'danger')
 
     return render_template('create_song.html')
+
+@app.route('/uploads', methods=['POST'])
+@creator_required
+def uploads():
+    file = request.files['song_file'] 
+    if file:
+        file.save(f'uploads/{secure_filename(file.filename)}')
+    
+    return redirect(url_for('creator_dashboard'))
+
+
 
 
 @app.route('/albums/<int:album_id>/delete')
@@ -479,6 +519,7 @@ def flag_song(song_id):
     if song:
         song.is_flag = True
         db.session.commit()
+        flash('Song has been flagged', 'success')
     return redirect(url_for('flagged_songs'))
 
 @app.route('/unflag_song/<int:song_id>', methods=['POST'])
@@ -488,6 +529,7 @@ def unflag_song(song_id):
     if song:
         song.is_flag = False
         db.session.commit()
+        flash('Song has been unflagged', 'success')
     return redirect(url_for('flagged_songs'))
 
 @app.route('/remove_song/<int:song_id>', methods=['POST'])

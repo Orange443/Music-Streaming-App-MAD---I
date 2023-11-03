@@ -22,7 +22,6 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.passhash, password)
 
-
 class Song(db.Model):
     __tablename__ = 'songs'
     song_id = db.Column(db.Integer, primary_key=True)
@@ -34,6 +33,7 @@ class Song(db.Model):
     album_id = db.Column(db.Integer, db.ForeignKey('albums.album_id'))
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     is_flag = db.Column(db.Boolean, nullable=False, default=False)
+    filename = db.Column(db.String(255))
 
     playlist = db.relationship('Playlist', backref='song', lazy=True)
 
