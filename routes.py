@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from models import db, User, Song, Album, Playlist, CreatorBlacklist
 from app import app
 from sqlalchemy import func, distinct
@@ -265,56 +265,11 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 
 #---------- Function to check if the file extension is allowed-------#
 def allowed_song_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-#------------ Function to save the uploaded song file----------------#
-def save_song_file(file):
-    if file and allowed_song_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        file.save(file_path)
-        return file_path
-    else:
-        return None
-
-@app.route('/create_song', methods=['GET', 'POST'])
-@creator_required
-def create_song():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        artist = request.form.get('artist')
-        lyrics = request.form.get('lyrics')
-        genre = request.form.get('genre')
-        
-        song_file = request.files['song_file']
-
-        if not title or not artist or not lyrics or not genre or not song_file:
-            flash('Please fill out all fields, including the song file', 'danger')
-        else:
-            if allowed_song_file(song_file.filename):
-                song_path = save_song_file(song_file)
-                new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], song_path=song_path)
-                db.session.add(new_song)
-                db.session.commit()
-
-                flash('New song created successfully', 'success')
-                return redirect(url_for('creator_dashboard'))
-            else:
-                flash('Invalid file type. Please upload an MP3 file.', 'danger')
-
-    return render_template('create_song.html')
-
-@app.route('/uploads', methods=['POST'])
-@creator_required
-def uploads():
-    file = request.files['song_file'] 
-    if file:
-        file.save(f'uploads/{secure_filename(file.filename)}')
-    
-    return redirect(url_for('creator_dashboard'))
-
-
+@app.route('/uploads/<path:path>')
+def send_static_music(path):
+    return send_from_directory('uploads', path)
 
 
 @app.route('/albums/<int:album_id>/delete')
@@ -394,12 +349,25 @@ def add_song(album_id):
         lyrics = request.form.get('lyrics')
         genre = request.form.get('genre')
 
-        new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], album_id=album_id)
-        db.session.add(new_song)
-        db.session.commit()
-
-        flash('New song created successfully', 'success')
-        return redirect(url_for('creator_dashboard'))
+        song_file = request.files['song_file']
+        
+        if not title or not artist or not lyrics or not genre or not song_file or not song_file.filename:
+            flash('Please fill out all fields, including the song file', 'danger')
+        
+        elif not allowed_song_file(song_file.filename):
+            flash('Invalid file type. Please upload an MP3 file.', 'danger')
+            
+        else:
+            secured_song_name = secure_filename(song_file.filename)
+        
+            new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], album_id=album_id, filename=secured_song_name)
+            db.session.add(new_song)
+            db.session.commit()
+            
+            song_file.save(os.path.join('uploads',secured_song_name))
+        
+            flash('New song created successfully', 'success')
+            return redirect(url_for('creator_dashboard'))
 
     return render_template('songs/add.html',user=User.query.get(session['user_id']) , album_id=album_id)
 
