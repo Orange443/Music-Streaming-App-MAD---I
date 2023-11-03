@@ -12,15 +12,14 @@
             <h3>{{ album.title }}</h3>
             <div class="song-list">
                 {% for song in album.songs %}
-                    <div class="song">
+                    <div class="song flex-column">
                         <div class="song-info">
                             <h4>{{ song.title }}</h4>
                             <p>Artist: {{ song.artist }}</p>
                             <p>Genre: {{ song.genre }}</p>
-                            <p>Lyrics: {{ song.lyrics }}</p>
+                            <p class="text-truncate" >Lyrics: {{ song.lyrics }}</p>
                         </div>
-                        <audio controls>
-                            <source src="{% if song.filename %}{{ url_for('uploads', filename='uploads/' + song.filename) }}{% endif %}" type="audio/mpeg">
+                        <audio src="/uploads/{{ song.filename }}" controls>
                             Your browser does not support the audio element.
                         </audio>
                         <div class="button-container">
