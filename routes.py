@@ -1,9 +1,10 @@
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory, jsonify
 from models import db, User, Song, Album, Playlist, CreatorBlacklist
 from app import app
 from sqlalchemy import func, distinct
 import os
+import json
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 import time
@@ -123,16 +124,24 @@ def admin_dashboard():
             total_creators = User.query.filter_by(role='Creator').count()
             total_albums = Album.query.count()
             distinct_genres = db.session.query(func.count(distinct(Album.genre))).scalar()
+
+            songs = Song.query.all()
+            song_labels = [song.title for song in songs]
+            song_ratings = [song.rating for song in songs]
+
             return render_template(
                 'admin_dashboard.html',
                 distinct_genres=distinct_genres, 
                 user=user, 
                 total_users=total_users,
                 total_creators=total_creators, 
-                total_albums=total_albums)  
-    
-    flash('You are not authorized to access the admin dashboard.', "danger")
-    return redirect(url_for('login'))
+                total_albums=total_albums,
+                song_labels=song_labels,  
+                song_ratings=song_ratings
+                )  
+    else:
+        flash('You are not authorized to access the admin dashboard.', "danger")
+        return redirect(url_for('login'))
 
 @app.route('/admin_login', methods=['POST'])
 def admin_login_post():
@@ -485,9 +494,12 @@ def flagged_songs():
 def flag_song(song_id):
     song = Song.query.get(song_id)
     if song:
-        song.is_flag = True
-        db.session.commit()
-        flash('Song has been flagged', 'success')
+        if not song.is_flag:
+            song.is_flag = True
+            db.session.commit()
+            flash('Song has been flagged', 'success')
+        else:
+            flash('Song is already flagged', 'danger')
     return redirect(url_for('flagged_songs'))
 
 @app.route('/unflag_song/<int:song_id>', methods=['POST'])
@@ -495,9 +507,12 @@ def flag_song(song_id):
 def unflag_song(song_id):
     song = Song.query.get(song_id)
     if song:
-        song.is_flag = False
-        db.session.commit()
-        flash('Song has been unflagged', 'success')
+        if song.song_id:
+            song.is_flag = False
+            db.session.commit()
+            flash('Song has been unflagged', 'success')
+        else:
+            flash('Song is not flagged', 'danger')
     return redirect(url_for('flagged_songs'))
 
 @app.route('/remove_song/<int:song_id>', methods=['POST'])

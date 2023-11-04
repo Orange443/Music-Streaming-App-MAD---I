@@ -1,12 +1,13 @@
 {% extends 'layout.html' %}
 
 {% block title %}
-    Admin Dashboard
+    Admin Dashboard 
 {% endblock %}
 
 {% block content %}
     <div class="container">
         <h1 class="text-center mt-5">Admin Dashboard</h1>
+        <hr>
 
         <div class="card mt-4">
             <div class="card-body">
@@ -43,28 +44,66 @@
                 </div>
             </div>
         </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h2>Song Ratings Chart</h2>
+                <canvas id="songRatingsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
     </div>
+    <br>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var songLabels = {{ song_labels | tojson }};
+        var songRatings = {{ song_ratings | tojson }};
 
-    <style>
-        .statistic-box {
-            background-color: #f2f2f2;
-            padding: 20px;
-            border-radius: 5px;
-            text-align: center;
-        }
+        var ctx = document.getElementById('songRatingsChart').getContext('2d');
+        var songRatingsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: songLabels,
+                datasets: [{
+                    label: 'Ratings',
+                    data: songRatings,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}
 
-        .statistic-box h4 {
-            font-size: 18px;
-        }
+{% block style %}
+<style>
+    .statistic-box {
+        background-color: #f2f2f2;
+        padding: 20px;
+        border-radius: 5px;
+        text-align: center;
+    }
 
-        .statistic-box p {
-            font-size: 24px;
-            font-weight: bold;
-        }
+    .statistic-box h4 {
+        font-size: 18px;
+    }
 
-        .card {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+    .statistic-box p {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+    
 {% endblock %}
