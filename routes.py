@@ -270,7 +270,7 @@ def add_album_post():
     return redirect(url_for('creator_dashboard'))
 
 ALLOWED_EXTENSIONS = {'mp3'}
-app.config['UPLOAD_FOLDER'] = 'uploads'
+#app.config['UPLOAD_FOLDER'] = 'uploads'
 
 #---------- Function to check if the file extension is allowed-------#
 def allowed_song_file(filename):
@@ -278,7 +278,7 @@ def allowed_song_file(filename):
 
 @app.route('/uploads/<path:path>')
 def send_static_music(path):
-    return send_from_directory('uploads', path)
+    return send_from_directory('/tmp/uploads', path)
 
 
 @app.route('/albums/<int:album_id>/delete')
@@ -368,6 +368,9 @@ def add_song(album_id):
             
         else:
             secured_song_name = secure_filename(song_file.filename)
+            upload_dir = '/tmp/uploads'
+            os.makedirs(upload_dir, exist_ok=True)
+            save_path = os.path.join(upload_dir, secured_song_name)
         
             new_song = Song(title=title, artist=artist, lyrics=lyrics, genre=genre, creator_id=session['user_id'], album_id=album_id, filename=secured_song_name)
             db.session.add(new_song)
